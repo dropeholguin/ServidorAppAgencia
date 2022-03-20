@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "babel src -d dist --source-maps",
-    "start": "nodemon ./app --exec babel-node",
-    "serve": "node dist/app.js"
+    "build": "babel app.js -d dist",
+    "devstart": "nodemon ./app --exec babel-node",
+    "start": "node ./app"
   },
   "author": "Pedro Luis Holguin",
   "license": "ISC",
