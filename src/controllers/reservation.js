@@ -7,6 +7,7 @@ import moment from 'moment'
 import crypto from 'crypto'
 import randomColor from 'randomcolor'
 import { STATUS_DEBE, STATUS_PAGADA } from './general/status'
+import { ROL_EMPLOYEE } from './general/roles'
 
 exports.createReservation = async (req, res, jwt, secret) => {
   try {
@@ -70,8 +71,10 @@ exports.updateReservation = async (req, res, jwt, secret) => {
 
 exports.listReservation = async (req, res, jwt, secret) => {
   try {
-    validateToken(req, jwt, secret)
-    let reservations = await req.app.db.models.reservation.find({}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
+    const { id, rol } = validateToken(req, jwt, secret)
+    let reservations = rol === ROL_EMPLOYEE
+      ? await req.app.db.models.reservation.find({usuario_creador: id}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
+      : await req.app.db.models.reservation.find({}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
     if (reservations) {
       res.status(200).send(reservations)
     }
@@ -104,8 +107,10 @@ exports.listByIdReservation = async (req, res, jwt, secret) => {
 
 exports.listReservationCalendar = async (req, res, jwt, secret) => {
   try {
-    validateToken(req, jwt, secret)
-    let reservations = await req.app.db.models.reservation.find({}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
+    const { id, rol } = validateToken(req, jwt, secret)
+    let reservations = rol === ROL_EMPLOYEE
+      ? await req.app.db.models.reservation.find({usuario_creador: id}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
+      : await req.app.db.models.reservation.find({}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
     let eventsReservation = []
     for (const reservation of reservations) {
       let dateStart = reservation.date.split(' - ')[0]

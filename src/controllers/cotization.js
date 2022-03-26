@@ -5,6 +5,7 @@ import { jsPDF } from 'jspdf'
 import 'jspdf-autotable'
 import moment from 'moment'
 import crypto from 'crypto'
+import { ROL_EMPLOYEE } from './general/roles'
 
 exports.createCotization = async (req, res, jwt, secret) => {
   try {
@@ -64,8 +65,10 @@ exports.updateCotization = async (req, res, jwt, secret) => {
 
 exports.listCotization = async (req, res, jwt, secret) => {
   try {
-    validateToken(req, jwt, secret)
-    let cotizations = await req.app.db.models.cotization.find({}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
+    const { id, rol } = validateToken(req, jwt, secret)
+    let cotizations = rol === ROL_EMPLOYEE
+      ? await req.app.db.models.cotization.find({usuario_creador: id}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
+      : await req.app.db.models.cotization.find({}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
     if (cotizations) {
       res.status(200).send(cotizations)
     }
