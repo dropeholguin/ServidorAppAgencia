@@ -119,8 +119,8 @@ exports.listReservationCalendar = async (req, res, jwt, secret) => {
         id: reservation._id,
         title: `Reserva: #${reservation.uid} - Cliente: ${reservation.client.first_name} ${reservation.client.last_name}`,
         allDay: true,
-        start: moment(dateStart, 'DD/MM/YYYY').toDate(),
-        end: moment(dateEnd, 'DD/MM/YYYY').add(1, 'day').toDate(),
+        start: moment(dateStart, 'DD/MM/YYYY hh:mm A').toDate(),
+        end: moment(dateEnd, 'DD/MM/YYYY hh:mm A').toDate(),
         color: randomColor({
           luminosity: 'light',
           hue: 'random',
