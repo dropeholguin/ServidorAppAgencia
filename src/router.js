@@ -36,7 +36,8 @@ import {
   listReservationCalendar,
   updateReservation,
   addPaymentReservation,
-  generatePdfReservation
+  generatePdfReservation,
+  generateInvoice
 } from './controllers/reservation'
 
 import {
@@ -92,6 +93,7 @@ exports = module.exports = (app, jwt, secret) => {
   app.post('/api/reservation/generatepdf/:id', (req, res) => generatePdfReservation(req, res, jwt, secret))
   app.put('/api/reservation', (req, res) => updateReservation(req, res, jwt, secret))
   app.put('/api/addpayment/reservation', (req, res) => addPaymentReservation(req, res, jwt, secret))
+  app.post('/api/reservation/generateinvoice/:id', (req, res) => generateInvoice(req, res, jwt, secret))
 
   // dashboard
   app.get('/api/stadistics/dashboard', (req, res) => stadisticsDasboard(req, res, jwt, secret))

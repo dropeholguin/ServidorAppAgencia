@@ -8,6 +8,7 @@ import crypto from 'crypto'
 import randomColor from 'randomcolor'
 import { STATUS_DEBE, STATUS_PAGADA } from './general/status'
 import { ROL_EMPLOYEE } from './general/roles'
+import { sendEmail } from '../util/sendEmail'
 
 exports.createReservation = async (req, res, jwt, secret) => {
   try {
@@ -31,6 +32,14 @@ exports.createReservation = async (req, res, jwt, secret) => {
     if (body) {
       const result = await req.app.db.models.reservation.create(body)
       if (result) {
+        const client = await req.app.db.models.user.findById(result.client)
+        sendEmail({
+          email: client.email,
+          subject: `Notificación ${client.first_name} ${client.last_name}`,
+          client,
+          reservation: result,
+          file: './src/views/email/reservation.jade'
+        })
         res.send('ok')
       }
     } else {
@@ -192,6 +201,9 @@ exports.generatePdfReservation = async (req, res, jwt, secret) => {
     doc.text('NIT. 94357933-1', 15, 35)
     doc.text('CRA 18 No. 6 - 03 Roldanillo Valle del Cauca - Colombia', 15, 45)
     doc.text('Tel: +57 315 4720982 | 22 99710', 15, 50)
+    doc.setFont('courier', 'bold')
+    doc.text('¡SIEMPRE HAY ALGUN LUGAR', 100, 30, null, null, 'center')
+    doc.text('NUEVO POR DESCUBRIR!', 100, 35, null, null, 'center')
     doc.setFont('times', 'bold')
     doc.text('Datos del Cliente', 15, 70)
     doc.text('N° Reservación', 120, 70)
@@ -248,6 +260,92 @@ exports.generatePdfReservation = async (req, res, jwt, secret) => {
       head: [['NOTAS IMPORTANTES']],
       body: [[reservation.notes]]
     })
+
+    const invoicePDF = Buffer.from(new Uint8Array(doc.output('arraybuffer'))).toString('base64')
+    if (invoicePDF) {
+      res.status(200).send(invoicePDF)
+    }
+  } catch (error) {
+    console.log(error)
+    res.status(404).send(error)
+  }
+}
+
+exports.generateInvoice = async (req, res, jwt, secret) => {
+  try {
+    validateToken(req, jwt, secret)
+    const {
+      id
+    } = req.params
+    // eslint-disable-next-line new-cap
+    const doc = new jsPDF({orientation: 'p', unit: 'mm', format: 'a4'})
+    const reservation = await req.app.db.models.reservation.findById(id).populate('client')
+    // let bodyTable = []
+    // for (const attr of reservation.attributesPlan) {
+    //   bodyTable.push([attr.key + 1, attr.name])
+    // }
+    doc.addImage(logo, 'image/png', 150, 4, 50, 70)
+    doc.setFontSize(45)
+    doc.setFont('helvetica', 'bold')
+    doc.text('FACTURA', 15, 15)
+    doc.setFontSize(13)
+    doc.setFont('times', 'normal')
+    doc.text('TRAVEL DELUXE', 15, 30)
+    doc.text('NIT. 94357933-1', 15, 35)
+    doc.text('CRA 18 No. 6 - 03 Roldanillo Valle del Cauca - Colombia', 15, 45)
+    doc.text('Tel: +57 315 4720982 | 22 99710', 15, 50)
+    doc.setFont('times', 'bold')
+    doc.text('Datos del Cliente', 15, 70)
+    doc.text('N° Reservación', 120, 70)
+    doc.text(reservation.uid, 120, 77)
+    doc.text('Fecha Reservación', 120, 88)
+    doc.text(moment(reservation.creation_date).format('DD-MM-YYYY'), 120, 95)
+    doc.setFont('times', 'normal')
+    doc.text(reservation.client.first_name.toUpperCase() + ' ' + reservation.client.last_name.toUpperCase(), 15, 77)
+    doc.text(`CC. ${reservation.client.document}`, 15, 82)
+    doc.text(reservation.client.address, 15, 90)
+    doc.text(reservation.client.email, 15, 95)
+    doc.autoTable({
+      theme: 'grid',
+      styles: {
+        fontSize: 13,
+        font: 'times'
+      },
+      margin: { top: 110 },
+      head: [['Descripción', '', 'Precio']],
+      body: [
+        ['Pago reserva', '', `$ ${Math.round(reservation.price).toLocaleString('es-CO')}`],
+        ['', ''],
+        ['', ''],
+        ['', ''],
+        ['', ''],
+        ['', ''],
+        ['', ''],
+        ['', '']
+      ],
+      foot: [['', 'Total', `$ ${Math.round(reservation.price).toLocaleString('es-CO')}`]]
+    })
+    // doc.autoTable({
+    //   theme: 'grid',
+    //   styles: {
+    //     fontSize: 13,
+    //     font: 'times'
+    //   },
+    //   margin: { top: 10 },
+    //   head: [['', 'SERVICIOS QUE INCLUYE TU PLAN']],
+    //   body: bodyTable,
+    //   foot: [['VALOR RESEVACIÓN', `$ ${Math.round(reservation.price).toLocaleString('es-CO')}`]]
+    // })
+    // doc.autoTable({
+    //   theme: 'plain',
+    //   styles: {
+    //     fontSize: 13,
+    //     font: 'times'
+    //   },
+    //   margin: { top: 0 },
+    //   head: [['NOTAS IMPORTANTES']],
+    //   body: [[reservation.notes]]
+    // })
 
     const invoicePDF = Buffer.from(new Uint8Array(doc.output('arraybuffer'))).toString('base64')
     if (invoicePDF) {
