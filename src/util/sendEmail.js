@@ -2,7 +2,7 @@ import email from 'emailjs'
 import jade from 'jade'
 
 exports.sendEmail = (data) => {
-  const forgotTemplate = jade.renderFile(data.file, data.reservation)
+  const forgotTemplate = jade.renderFile(data.file, data.body)
   const user = process.env.CREDENTIALS_EMAIL_USER
   const password = process.env.CREDENTIALS_EMAIL_PASSWORD
   const host = process.env.CREDENTIALS_EMAIL_SERVER

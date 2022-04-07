@@ -37,7 +37,20 @@ exports.createReservation = async (req, res, jwt, secret) => {
           email: client.email,
           subject: `Notificación ${client.first_name} ${client.last_name}`,
           client,
-          reservation: result,
+          body: {
+            uid: result.uid,
+            client: `${client.first_name} ${client.last_name}`,
+            date: moment(result.creation_date).format('DD-MM-YYYY hh:mm'),
+            email: client.email,
+            document: client.document,
+            phone: client.phone,
+            destination: result.destination,
+            hotel: result.hotel,
+            numPeople: result.numPeople,
+            airline: result.airline,
+            dateReservation: result.date,
+            price: `$ ${Math.round(result.price).toLocaleString('es-CO')}`
+          },
           file: './src/views/email/reservation.jade'
         })
         res.send('ok')
