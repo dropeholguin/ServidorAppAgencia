@@ -9,6 +9,7 @@ import randomColor from 'randomcolor'
 import { STATUS_DEBE, STATUS_PAGADA } from './general/status'
 import { ROL_EMPLOYEE } from './general/roles'
 import { sendEmail } from '../util/sendEmail'
+import cryptoRandomInt from 'crypto-random-int'
 
 exports.createReservation = async (req, res, jwt, secret) => {
   try {
@@ -286,17 +287,23 @@ exports.generatePdfReservation = async (req, res, jwt, secret) => {
 
 exports.generateInvoice = async (req, res, jwt, secret) => {
   try {
-    validateToken(req, jwt, secret)
+    const { id } = validateToken(req, jwt, secret)
     const {
-      id
+      id: reservationId
     } = req.params
     // eslint-disable-next-line new-cap
     const doc = new jsPDF({orientation: 'p', unit: 'mm', format: 'a4'})
-    const reservation = await req.app.db.models.reservation.findById(id).populate('client')
-    // let bodyTable = []
-    // for (const attr of reservation.attributesPlan) {
-    //   bodyTable.push([attr.key + 1, attr.name])
-    // }
+    const reservation = await req.app.db.models.reservation.findById(reservationId).populate('client')
+    let invoice = await req.app.db.models.invoice.findOne({reservation: reservation.id})
+    if (!invoice) {
+      invoice = await req.app.db.models.invoice.create({
+        reservation: reservation.id,
+        client: reservation.client.id,
+        uid: await cryptoRandomInt(0, 1000000),
+        total: reservation.price,
+        usuario_creador: id
+      })
+    }
     doc.addImage(logo, 'image/png', 150, 4, 50, 70)
     doc.setFontSize(45)
     doc.setFont('helvetica', 'bold')
@@ -307,58 +314,48 @@ exports.generateInvoice = async (req, res, jwt, secret) => {
     doc.text('NIT. 94357933-1', 15, 35)
     doc.text('CRA 18 No. 6 - 03 Roldanillo Valle del Cauca - Colombia', 15, 45)
     doc.text('Tel: +57 315 4720982 | 22 99710', 15, 50)
+    doc.setFont('courier', 'bold')
+    doc.text('¡LA MEJOR EXPERIENCIA EN VIAJES!', 100, 30, null, null, 'center')
     doc.setFont('times', 'bold')
     doc.text('Datos del Cliente', 15, 70)
-    doc.text('N° Reservación', 120, 70)
-    doc.text(reservation.uid, 120, 77)
-    doc.text('Fecha Reservación', 120, 88)
-    doc.text(moment(reservation.creation_date).format('DD-MM-YYYY'), 120, 95)
+    doc.text('N° Factura', 120, 70)
+    doc.text(invoice.uid, 120, 77)
+    doc.text('Fecha Factura', 120, 88)
+    doc.text(moment(invoice.creation_date).format('DD-MM-YYYY'), 120, 95)
     doc.setFont('times', 'normal')
     doc.text(reservation.client.first_name.toUpperCase() + ' ' + reservation.client.last_name.toUpperCase(), 15, 77)
     doc.text(`CC. ${reservation.client.document}`, 15, 82)
     doc.text(reservation.client.address, 15, 90)
     doc.text(reservation.client.email, 15, 95)
     doc.autoTable({
-      theme: 'grid',
+      theme: 'striped',
       styles: {
         fontSize: 13,
         font: 'times'
       },
       margin: { top: 110 },
-      head: [['Descripción', '', 'Precio']],
+      head: [['Descripción', 'Cant.', 'Valor']],
       body: [
-        ['Pago reserva', '', `$ ${Math.round(reservation.price).toLocaleString('es-CO')}`],
-        ['', ''],
-        ['', ''],
-        ['', ''],
-        ['', ''],
-        ['', ''],
-        ['', ''],
-        ['', '']
+        [`Reservación a ${reservation.destination} en el hotel ${reservation.hotel}, para ${reservation.numPeople} personas.`, '1', `$ ${Math.round(invoice.total).toLocaleString('es-CO')}`],
+        ['', '', ''],
+        ['', '', ''],
+        ['', '', ''],
+        ['', '', ''],
+        ['', '', '']
       ],
-      foot: [['', 'Total', `$ ${Math.round(reservation.price).toLocaleString('es-CO')}`]]
+      foot: [['', 'Total Factura', `$ ${Math.round(invoice.total).toLocaleString('es-CO')}`]]
     })
-    // doc.autoTable({
-    //   theme: 'grid',
-    //   styles: {
-    //     fontSize: 13,
-    //     font: 'times'
-    //   },
-    //   margin: { top: 10 },
-    //   head: [['', 'SERVICIOS QUE INCLUYE TU PLAN']],
-    //   body: bodyTable,
-    //   foot: [['VALOR RESEVACIÓN', `$ ${Math.round(reservation.price).toLocaleString('es-CO')}`]]
-    // })
-    // doc.autoTable({
-    //   theme: 'plain',
-    //   styles: {
-    //     fontSize: 13,
-    //     font: 'times'
-    //   },
-    //   margin: { top: 0 },
-    //   head: [['NOTAS IMPORTANTES']],
-    //   body: [[reservation.notes]]
-    // })
+
+    doc.autoTable({
+      theme: 'plain',
+      styles: {
+        fontSize: 10,
+        font: 'times'
+      },
+      margin: { top: 0 },
+      head: [['NOTA IMPORTANTE']],
+      body: [['El cumplimiento con ley de 679 de 2011 y la resolución 3840 de 2009, la Agencia de viajes Travel Deluxe se acoge al código de conducta con el fin de prevenir y contrarrestar la explotación la pornografía y el turismo sexual con niños, niñas y adolescentes. El turno con fines de la pornografía y turismo sexual con niños y niñas. El turismo con fines de explotación sexual de menores es una conducta prohibida en Colombia y sancionada por la ley.']]
+    })
 
     const invoicePDF = Buffer.from(new Uint8Array(doc.output('arraybuffer'))).toString('base64')
     if (invoicePDF) {

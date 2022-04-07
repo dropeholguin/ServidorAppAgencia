@@ -21,6 +21,7 @@
     "cors": "^2.8.4",
     "cors-prefetch-middleware": "^1.0.0",
     "crypto": "^1.0.1",
+    "crypto-random-int": "^1.0.1",
     "debug": "~2.6.9",
     "dotenv": "^8.2.0",
     "emailjs": "^2.2.0",
