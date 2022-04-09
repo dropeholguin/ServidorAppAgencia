@@ -23,7 +23,7 @@ exports.createReservation = async (req, res, jwt, secret) => {
     body.uid = uid
     body.statusPayment = body.isTotal ? STATUS_PAGADA : STATUS_DEBE
     if (body.payment) {
-      body.payments = [{price: body.payment, date: moment().format('DD-MM-YYYY hh:mm')}]
+      body.payments = [{price: parseInt(body.payment), date: moment().format('DD-MM-YYYY hh:mm')}]
     }
     delete body._id
     delete body.fecha_creacion
