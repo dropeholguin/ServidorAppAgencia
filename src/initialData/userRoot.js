@@ -4,7 +4,7 @@ const rootUser = {
   email: 'agenciatraveldeluxe0104@gmail.com',
   username: 'agenciatraveldeluxe',
   phone: '3104437083',
-  password: '$2b$10$jGM6sqPSZb/UK7cWS8FUcehXU3EYt67hmBdkFA/pab3dekm5PhL6y',
+  password: '$2a$10$S0zny5WCXydlqtfjGnq0uO.4ZTkisc2hZpxVsvpMkq8GOViZPKDme',
   first_name: 'Admin Travel',
   last_name: 'Deluxe',
   document: '999999999',

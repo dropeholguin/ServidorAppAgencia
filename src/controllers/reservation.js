@@ -23,7 +23,7 @@ exports.createReservation = async (req, res, jwt, secret) => {
     body.uid = uid
     body.statusPayment = body.isTotal ? STATUS_PAGADA : STATUS_DEBE
     if (body.payment) {
-      body.payments = [{price: parseInt(body.payment), date: moment().format('DD-MM-YYYY hh:mm')}]
+      body.payments = [{price: parseInt(body.payment), date: moment().format('DD-MM-YYYY hh:mm a')}]
     }
     delete body._id
     delete body.fecha_creacion
@@ -143,7 +143,7 @@ exports.listReservationCalendar = async (req, res, jwt, secret) => {
         title: `Reserva: #${reservation.uid} - Cliente: ${reservation.client.first_name} ${reservation.client.last_name}`,
         allDay: true,
         start: moment(dateStart, 'DD/MM/YYYY hh:mm A').toDate(),
-        end: moment(dateEnd, 'DD/MM/YYYY hh:mm A').toDate(),
+        end: dateEnd !== 'Fecha inválida' ? moment(dateEnd, 'DD/MM/YYYY hh:mm A').toDate() : moment(dateStart, 'DD/MM/YYYY hh:mm A').toDate(),
         color: randomColor({
           luminosity: 'light',
           hue: 'random',
