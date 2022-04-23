@@ -44,6 +44,20 @@ import {
   stadisticsDasboard
 } from './controllers/dashboard'
 
+import {
+  createPromotion,
+  listPromotion,
+  listByIdPromotion,
+  updatePromotion
+} from './controllers/promotion'
+
+import {
+  createMinorBox,
+  listMinorBox,
+  listByIdMinorBox,
+  updateMinorBox
+} from './controllers/minorBox'
+
 exports = module.exports = (app, jwt, secret) => {
   app.get('/', async (req, res) => {
     try {
@@ -97,6 +111,18 @@ exports = module.exports = (app, jwt, secret) => {
 
   // dashboard
   app.get('/api/stadistics/dashboard', (req, res) => stadisticsDasboard(req, res, jwt, secret))
+
+  // Promociones
+  app.post('/api/promotion', (req, res) => createPromotion(req, res, jwt, secret))
+  app.put('/api/promotion', (req, res) => updatePromotion(req, res, jwt, secret))
+  app.post('/api/promotion/:id', (req, res) => listByIdPromotion(req, res, jwt, secret))
+  app.get('/api/promotions', (req, res) => listPromotion(req, res, jwt, secret))
+
+  // Caja menor
+  app.post('/api/minorbox', (req, res) => createMinorBox(req, res, jwt, secret))
+  app.put('/api/minorbox', (req, res) => updateMinorBox(req, res, jwt, secret))
+  app.post('/api/minorbox/:id', (req, res) => listByIdMinorBox(req, res, jwt, secret))
+  app.get('/api/minorboxs', (req, res) => listMinorBox(req, res, jwt, secret))
 
   // catch 404 and forward to error handler
   app.use(function (_req, _res, next) {

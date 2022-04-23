@@ -34,7 +34,7 @@ exports.createUser = async (req, res, jwt, secret) => {
       const result = await req.app.db.models.user.create(userData)
       if (result) {
         if (base64Image) {
-          await uploadImage(imageName, base64Image, req, result._id)
+          await uploadImage(imageName, base64Image, req, result._id, 'user')
         }
         res.send('ok')
       }
@@ -186,7 +186,7 @@ exports.findUserByIdentification = async (req, res, jwt, secret) => {
 exports.listClientSelect = async (req, res, jwt, secret) => {
   try {
     validateToken(req, jwt, secret)
-    let clients = await req.app.db.models.user.find({rol: ROL_CLIENT})
+    let clients = await req.app.db.models.user.find({rol: ROL_CLIENT, stateDelete: false})
     let newClients = clients.map(client => {
       return {
         label: `${client.first_name} ${client.last_name}`,

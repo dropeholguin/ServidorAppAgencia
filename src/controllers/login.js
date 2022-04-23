@@ -34,7 +34,6 @@ exports.changePassword = async (req, res, jwt, secret) => {
       })
     }
   } catch (error) {
-    console.log(error)
     res.status(404).send({
       isCreate: false,
       msj: 'Error en el servidor!'

@@ -1,6 +1,6 @@
 import AWS from 'aws-sdk'
 
-const uploadImage = (imageName, base64Image, req, id) => {
+const uploadImage = (imageName, base64Image, req, id, model) => {
   const { BUCKET_NAME, AWS_SECRET_ACCESS, AWS_ACCESS_KEY } = process.env
   AWS.config.update({
     secretAccessKey: AWS_SECRET_ACCESS,
@@ -19,11 +19,19 @@ const uploadImage = (imageName, base64Image, req, id) => {
     if (err) {
       console.log('Error al subir imagen')
     } else {
-      await req.app.db.models.user.updateOne({'_id': id}, {
-        $set: {
-          image: data.key
-        }
-      })
+      if (model === 'user') {
+        await req.app.db.models.user.updateOne({'_id': id}, {
+          $set: {
+            image: data.key
+          }
+        })
+      } else if (model === 'promotion') {
+        await req.app.db.models.promotion.updateOne({'_id': id}, {
+          $set: {
+            image: data.key
+          }
+        })
+      }
     }
   })
 }
