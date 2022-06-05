@@ -2,15 +2,19 @@ import axios from 'axios'
 const blockList = ['']
 
 exports.validateToken = (req, jwt, secret) => {
-  const authorization = req.headers['authorization']
-  if (!authorization) throw new Error('Token invalido')
-  const bearer = authorization.split(' ')
-  if (bearer.length < 2) throw new Error('Token invalido')
-  const token = bearer[1]
-  if (blockList.some(d => d === token)) throw new Error('Token invalido')
-  const data = jwt.verify(token, secret)
-  if (!data) throw new Error('Error en data de Token')
-  return data
+  try {
+    const authorization = req.headers['authorization']
+    if (!authorization) throw new Error('Inicie sesión de nuevo')
+    const bearer = authorization.split(' ')
+    if (bearer.length < 2) throw new Error('Inicie sesión de nuevo')
+    const token = bearer[1]
+    if (blockList.some(d => d === token)) throw new Error('Inicie sesión de nuevo')
+    const data = jwt.verify(token, secret)
+    if (!data) throw new Error('Inicie sesión de nuevo')
+    return data
+  } catch (error) {
+    throw new Error('Inicie sesión de nuevo')
+  }
 }
 
 exports.validateEmail = (email) => {

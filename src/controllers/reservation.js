@@ -135,6 +135,7 @@ exports.listReservationCalendar = async (req, res, jwt, secret) => {
       ? await req.app.db.models.reservation.find({usuario_creador: id}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
       : await req.app.db.models.reservation.find({}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
     let eventsReservation = []
+
     for (const reservation of reservations) {
       let dateStart = reservation.date.split(' - ')[0]
       let dateEnd = reservation.date.split(' - ')[1]

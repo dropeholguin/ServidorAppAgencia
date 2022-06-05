@@ -1,6 +1,6 @@
 import { validateToken } from './general'
 import _ from 'lodash'
-import { ROL_CLIENT } from './general/roles'
+import { ROL_CLIENT, ROL_EMPLOYEE } from './general/roles'
 import uploadImage from '../util/uploadImage'
 
 exports.createUser = async (req, res, jwt, secret) => {
@@ -196,6 +196,25 @@ exports.listClientSelect = async (req, res, jwt, secret) => {
 
     if (newClients) {
       res.status(200).send(newClients)
+    }
+  } catch (error) {
+    res.status(404).send(error.message)
+  }
+}
+
+exports.listEmployeeSelect = async (req, res, jwt, secret) => {
+  try {
+    validateToken(req, jwt, secret)
+    let employees = await req.app.db.models.user.find({rol: ROL_EMPLOYEE, stateDelete: false})
+    let newEmployees = employees.map(employee => {
+      return {
+        label: `${employee.first_name} ${employee.last_name}`,
+        value: employee._id
+      }
+    })
+
+    if (newEmployees) {
+      res.status(200).send(newEmployees)
     }
   } catch (error) {
     res.status(404).send(error.message)

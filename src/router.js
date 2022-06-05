@@ -18,7 +18,8 @@ import {
   listUsers,
   listByIdUser,
   findUserByIdentification,
-  listClientSelect
+  listClientSelect,
+  listEmployeeSelect
 } from './controllers/user'
 
 import {
@@ -41,7 +42,8 @@ import {
 } from './controllers/reservation'
 
 import {
-  stadisticsDasboard
+  stadisticsDasboard,
+  filterReservation
 } from './controllers/dashboard'
 
 import {
@@ -91,6 +93,7 @@ exports = module.exports = (app, jwt, secret) => {
   app.get('/api/user/:rol', (req, res) => listUsers(req, res, jwt, secret))
   app.post('/api/user/:id/', (req, res) => listByIdUser(req, res, jwt, secret))
   app.get('/api/clientsselect', (req, res) => listClientSelect(req, res, jwt, secret))
+  app.get('/api/employeesselect', (req, res) => listEmployeeSelect(req, res, jwt, secret))
 
   // cotizaciones
   app.post('/api/cotization', (req, res) => createCotization(req, res, jwt, secret))
@@ -111,6 +114,7 @@ exports = module.exports = (app, jwt, secret) => {
 
   // dashboard
   app.get('/api/stadistics/dashboard', (req, res) => stadisticsDasboard(req, res, jwt, secret))
+  app.post('/api/filter/reservation', (req, res) => filterReservation(req, res, jwt, secret))
 
   // Promociones
   app.post('/api/promotion', (req, res) => createPromotion(req, res, jwt, secret))
