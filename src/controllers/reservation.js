@@ -96,8 +96,8 @@ exports.listReservation = async (req, res, jwt, secret) => {
   try {
     const { id, rol } = validateToken(req, jwt, secret)
     let reservations = rol === ROL_EMPLOYEE
-      ? await req.app.db.models.reservation.find({usuario_creador: id}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
-      : await req.app.db.models.reservation.find({}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
+      ? await req.app.db.models.reservation.find({usuario_creador: id, status: false}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
+      : await req.app.db.models.reservation.find({status: false}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
     if (reservations) {
       res.status(200).send(reservations)
     }
@@ -132,8 +132,8 @@ exports.listReservationCalendar = async (req, res, jwt, secret) => {
   try {
     const { id, rol } = validateToken(req, jwt, secret)
     let reservations = rol === ROL_EMPLOYEE
-      ? await req.app.db.models.reservation.find({usuario_creador: id}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
-      : await req.app.db.models.reservation.find({}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
+      ? await req.app.db.models.reservation.find({usuario_creador: id, status: false}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
+      : await req.app.db.models.reservation.find({status: false}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
     let eventsReservation = []
 
     for (const reservation of reservations) {
@@ -364,6 +364,33 @@ exports.generateInvoice = async (req, res, jwt, secret) => {
     }
   } catch (error) {
     console.log(error)
+    res.status(404).send(error)
+  }
+}
+
+exports.updateStatusReservation = async (req, res, jwt, secret) => {
+  try {
+    const data = req.body
+    const { id } = validateToken(req, jwt, secret)
+    if (data && data.idReservation) {
+      let reservation = await req.app.db.models.reservation.findById(data.idReservation)
+      let status = !reservation.status
+      const result = await req.app.db.models.reservation.updateOne({
+        '_id': data.idReservation
+      }, {
+        $set: {
+          status: status,
+          usuario_actualiza: id,
+          fecha_actualizacion: new Date()
+        }
+      })
+      if (result) {
+        res.send('ok')
+      }
+    } else {
+      throw new Error('Se debe enviar la reserva para actualizar')
+    }
+  } catch (error) {
     res.status(404).send(error)
   }
 }

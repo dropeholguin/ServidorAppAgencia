@@ -17,6 +17,7 @@ exports = module.exports = (app, mongoose) => {
     notes: {type: String},
     isTotal: {type: Boolean, default: false},
     statusPayment: {type: String},
+    status: {type: Boolean, default: false},
     usuario_creador: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'user'
