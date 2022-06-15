@@ -96,9 +96,12 @@ exports.listReservation = async (req, res, jwt, secret) => {
   try {
     const { id, rol } = validateToken(req, jwt, secret)
     let reservations = rol === ROL_EMPLOYEE
-      ? await req.app.db.models.reservation.find({usuario_creador: id, status: false}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
-      : await req.app.db.models.reservation.find({status: false}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
+      ? await req.app.db.models.reservation.find({usuario_creador: id, status: false}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
+      : await req.app.db.models.reservation.find({status: false}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
     if (reservations) {
+      reservations.sort((a, b) => {
+        return moment(a.date.split(' - ')[0], 'DD/MM/YYYY hh:mm A').toDate() - moment(b.date.split(' - ')[0], 'DD/MM/YYYY hh:mm A').toDate()
+      })
       res.status(200).send(reservations)
     }
   } catch (error) {
