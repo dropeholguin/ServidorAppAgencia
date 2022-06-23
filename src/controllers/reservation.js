@@ -299,6 +299,7 @@ exports.generateInvoice = async (req, res, jwt, secret) => {
     const doc = new jsPDF({orientation: 'p', unit: 'mm', format: 'a4'})
     const reservation = await req.app.db.models.reservation.findById(reservationId).populate('client')
     let invoice = await req.app.db.models.invoice.findOne({reservation: reservation.id})
+    let bodyTable = [[`Reservación a ${reservation.destination} en el hotel ${reservation.hotel}, para ${reservation.numPeople} personas.`, '1', `$ ${Math.round(invoice.total).toLocaleString('es-CO')}`]]
     if (!invoice) {
       invoice = await req.app.db.models.invoice.create({
         reservation: reservation.id,
@@ -307,6 +308,9 @@ exports.generateInvoice = async (req, res, jwt, secret) => {
         total: reservation.price,
         usuario_creador: id
       })
+    }
+    for (const attr of reservation.attributesPlan) {
+      bodyTable.push([attr.name.toUpperCase(), '', ''])
     }
     doc.addImage(logo, 'image/png', 150, 4, 50, 70)
     doc.setFontSize(45)
@@ -339,14 +343,7 @@ exports.generateInvoice = async (req, res, jwt, secret) => {
       },
       margin: { top: 110 },
       head: [['Descripción', 'Cant.', 'Valor']],
-      body: [
-        [`Reservación a ${reservation.destination} en el hotel ${reservation.hotel}, para ${reservation.numPeople} personas.`, '1', `$ ${Math.round(invoice.total).toLocaleString('es-CO')}`],
-        ['', '', ''],
-        ['', '', ''],
-        ['', '', ''],
-        ['', '', ''],
-        ['', '', '']
-      ],
+      body: bodyTable,
       foot: [['', 'Total Factura', `$ ${Math.round(invoice.total).toLocaleString('es-CO')}`]]
     })
 
