@@ -1,5 +1,5 @@
 // eslint-disable-next-line standard/object-curly-even-spacing
-import { validateToken, logo, getImagesDestination} from './general'
+import { validateToken, logo, getImagesDestination } from './general'
 import _ from 'lodash'
 import { jsPDF } from 'jspdf'
 import 'jspdf-autotable'
@@ -8,7 +8,6 @@ import crypto from 'crypto'
 import randomColor from 'randomcolor'
 import { STATUS_DEBE, STATUS_PAGADA } from './general/status'
 import { ROL_EMPLOYEE } from './general/roles'
-import { sendEmail } from '../util/sendEmail'
 import cryptoRandomInt from 'crypto-random-int'
 
 exports.createReservation = async (req, res, jwt, secret) => {
@@ -23,7 +22,7 @@ exports.createReservation = async (req, res, jwt, secret) => {
     body.uid = uid
     body.statusPayment = body.isTotal ? STATUS_PAGADA : STATUS_DEBE
     if (body.payment) {
-      body.payments = [{price: parseInt(body.payment), date: moment().format('DD-MM-YYYY hh:mm a')}]
+      body.payments = [{ price: parseInt(body.payment), date: moment().format('DD-MM-YYYY hh:mm a') }]
     }
     delete body._id
     delete body.fecha_creacion
@@ -33,27 +32,6 @@ exports.createReservation = async (req, res, jwt, secret) => {
     if (body) {
       const result = await req.app.db.models.reservation.create(body)
       if (result) {
-        const client = await req.app.db.models.user.findById(result.client)
-        sendEmail({
-          email: client.email,
-          subject: `Notificación ${client.first_name} ${client.last_name}`,
-          client,
-          body: {
-            uid: result.uid,
-            client: `${client.first_name} ${client.last_name}`,
-            date: moment(result.creation_date).format('DD-MM-YYYY hh:mm'),
-            email: client.email,
-            document: client.document,
-            phone: client.phone,
-            destination: result.destination,
-            hotel: result.hotel,
-            numPeople: result.numPeople,
-            airline: result.airline,
-            dateReservation: result.date,
-            price: `$ ${Math.round(result.price).toLocaleString('es-CO')}`
-          },
-          file: './src/views/email/reservation.jade'
-        })
         res.send('ok')
       }
     } else {
@@ -96,8 +74,8 @@ exports.listReservation = async (req, res, jwt, secret) => {
   try {
     const { id, rol } = validateToken(req, jwt, secret)
     let reservations = rol === ROL_EMPLOYEE
-      ? await req.app.db.models.reservation.find({usuario_creador: id, status: false}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
-      : await req.app.db.models.reservation.find({status: false}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
+      ? await req.app.db.models.reservation.find({ usuario_creador: id, status: false }).populate('client').populate('usuario_actualiza').populate('usuario_creador')
+      : await req.app.db.models.reservation.find({ status: false }).populate('client').populate('usuario_actualiza').populate('usuario_creador')
     if (reservations) {
       reservations.sort((a, b) => {
         return moment(a.date.split(' - ')[0], 'DD/MM/YYYY hh:mm A').toDate() - moment(b.date.split(' - ')[0], 'DD/MM/YYYY hh:mm A').toDate()
@@ -135,8 +113,8 @@ exports.listReservationCalendar = async (req, res, jwt, secret) => {
   try {
     const { id, rol } = validateToken(req, jwt, secret)
     let reservations = rol === ROL_EMPLOYEE
-      ? await req.app.db.models.reservation.find({usuario_creador: id, status: false}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
-      : await req.app.db.models.reservation.find({status: false}).sort({creation_date: -1}).populate('client').populate('usuario_actualiza').populate('usuario_creador')
+      ? await req.app.db.models.reservation.find({ usuario_creador: id, status: false }).sort({ creation_date: -1 }).populate('client').populate('usuario_actualiza').populate('usuario_creador')
+      : await req.app.db.models.reservation.find({ status: false }).sort({ creation_date: -1 }).populate('client').populate('usuario_actualiza').populate('usuario_creador')
     let eventsReservation = []
 
     for (const reservation of reservations) {
@@ -202,7 +180,7 @@ exports.generatePdfReservation = async (req, res, jwt, secret) => {
       id
     } = req.params
     // eslint-disable-next-line new-cap
-    const doc = new jsPDF({orientation: 'p', unit: 'mm', format: 'a4'})
+    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' })
     const reservation = await req.app.db.models.reservation.findById(id).populate('client')
     let bodyTable = []
     let images = await getImagesDestination(reservation.destination)
@@ -296,9 +274,9 @@ exports.generateInvoice = async (req, res, jwt, secret) => {
       id: reservationId
     } = req.params
     // eslint-disable-next-line new-cap
-    const doc = new jsPDF({orientation: 'p', unit: 'mm', format: 'a4'})
+    const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' })
     const reservation = await req.app.db.models.reservation.findById(reservationId).populate('client')
-    let invoice = await req.app.db.models.invoice.findOne({reservation: reservation.id})
+    let invoice = await req.app.db.models.invoice.findOne({ reservation: reservation.id })
     if (!invoice) {
       invoice = await req.app.db.models.invoice.create({
         reservation: reservation.id,
